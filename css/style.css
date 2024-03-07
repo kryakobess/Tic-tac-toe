@@ -12,6 +12,29 @@
     padding: 10px;
 }
 
+input {
+    text-align: center;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin: auto;
+    display: block;
+}
+
+.game-options {
+    padding: 1em;
+    font-size: 1rem;
+}
+
+.game-options label {
+    font-weight: bold;
+    padding: 1em;
+    font-size: 1rem;
+    font-family: "Courier New";
+    text-align: center;
+    margin: auto;
+    display: block;
+}
+
 button {
     background-color: #f44336;
     border: none;

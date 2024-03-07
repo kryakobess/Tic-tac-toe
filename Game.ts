@@ -19,16 +19,18 @@ class Mark {
 
 const X_MARK = new Mark("X", "rgba(205, 92, 92, 0.6)")
 const O_MARK = new Mark("O", "rgba(48,182,18,0.6)")
-const FIELD_LENGTH= 3;
 
 class TicTacToe {
     private gameField : Field
+    private stepCounter = 0
+    private fieldStartLen = 3
     private isFinished : boolean = false
 
-    public startGame() {
-        this.gameField = new Field(FIELD_LENGTH)
+    public startGame(len : number) {
+        this.fieldStartLen = len
+        this.initField()
         this.isFinished = false
-        let stepCounter = 0;
+        this.stepCounter = 0;
         let gameContext = this
 
         this.gameField.cells.forEach(cell =>
@@ -37,26 +39,37 @@ class TicTacToe {
                     return
                 }
 
-                if (stepCounter % 2 === 0) {
-                    gameContext.gameField.changeColor(O_MARK.color) //next step
-                    this.style.background = X_MARK.color
-                    this.textContent = X_MARK.symb
-                } else {
-                    gameContext.gameField.changeColor(X_MARK.color) //next step
-                    this.style.background = O_MARK.color
-                    this.textContent = O_MARK.symb
-                }
-                stepCounter++
+                gameContext.doStepOnCell(this)
 
-                if (TicTacToe.isWin(gameContext.gameField.cells)) {
+                if (gameContext.isWin(gameContext.gameField.cells)) {
                     gameContext.finishAndRestart(this.textContent + " wins!!!")
                     return;
-                } else if (stepCounter === FIELD_LENGTH * FIELD_LENGTH) {
+                } else if (gameContext.stepCounter === gameContext.fieldStartLen * gameContext.fieldStartLen) {
                     gameContext.finishAndRestart("It's a draw...")
                     return;
                 }
             })
         )
+    }
+
+    private initField() {
+        if (typeof this.gameField !== 'undefined' && this.gameField !== null) {
+            this.gameField.remove()
+        }
+        this.gameField = new Field(this.fieldStartLen)
+    }
+
+    private doStepOnCell(cell : HTMLTableCellElement) {
+        if (this.stepCounter % 2 === 0) {
+            this.gameField.changeColor(O_MARK.color) //next step
+            cell.style.background = X_MARK.color
+            cell.textContent = X_MARK.symb
+        } else {
+            this.gameField.changeColor(X_MARK.color) //next step
+            cell.style.background = O_MARK.color
+            cell.textContent = O_MARK.symb
+        }
+        this.stepCounter++
     }
 
     public finishAndRestart(message : string) {
@@ -69,10 +82,10 @@ class TicTacToe {
         document.body.appendChild(restartButton)
         let gameContext = this
         restartButton.addEventListener("click", function () {
-            gameContext.gameField.remove()
-            gameContext.startGame()
+            gameContext.initField()
             document.body.removeChild(restartButton)
             document.body.removeChild(finishMessage)
+            gameContext.startGame(gameContext.fieldStartLen)
         })
     }
 
@@ -84,24 +97,24 @@ class TicTacToe {
         return resultMessage
     }
 
-    private static isWin(cells : Array<HTMLTableCellElement>): boolean {
-        for (let i = 0; i < FIELD_LENGTH; ++i) {
-            if (TicTacToe.isFullRow(cells, i)) {
+    private isWin(cells : Array<HTMLTableCellElement>): boolean {
+        for (let i = 0; i < this.fieldStartLen; ++i) {
+            if (this.isFullRow(cells, i)) {
                 return true
             }
-            if (TicTacToe.isFullColumn(cells, i)) {
+            if (this.isFullColumn(cells, i)) {
                 return true
             }
         }
-        return TicTacToe.isDiagonal(cells);
+        return this.isDiagonal(cells);
     }
 
 
-    private static isDiagonal(cells: Array<HTMLTableCellElement>) {
+    private isDiagonal(cells: Array<HTMLTableCellElement>) {
         let isDiag : boolean = false
-        for (let i = 0; i < FIELD_LENGTH - 1; ++i) {
-            isDiag = cells[i + (FIELD_LENGTH * i)].textContent != '' &&
-                cells[i + (FIELD_LENGTH * i)].textContent === cells[(i + 1) + (FIELD_LENGTH  * (i + 1))].textContent
+        for (let i = 0; i < this.fieldStartLen - 1; ++i) {
+            isDiag = cells[i + (this.fieldStartLen * i)].textContent != '' &&
+                cells[i + (this.fieldStartLen * i)].textContent === cells[(i + 1) + (this.fieldStartLen  * (i + 1))].textContent
             if (isDiag == false) break
         }
 
@@ -109,33 +122,33 @@ class TicTacToe {
             return true
         }
 
-        for (let i = FIELD_LENGTH - 1; i >= 1; --i) {
-            isDiag = cells[i + (FIELD_LENGTH * (FIELD_LENGTH - (i + 1)))].textContent != '' &&
-                cells[i + (FIELD_LENGTH * (FIELD_LENGTH - (i + 1)))].textContent == cells[(FIELD_LENGTH * (FIELD_LENGTH - i) + (i - 1))].textContent
+        for (let i = this.fieldStartLen - 1; i >= 1; --i) {
+            isDiag = cells[i + (this.fieldStartLen * (this.fieldStartLen - (i + 1)))].textContent != '' &&
+                cells[i + (this.fieldStartLen * (this.fieldStartLen - (i + 1)))].textContent == cells[(this.fieldStartLen * (this.fieldStartLen - i) + (i - 1))].textContent
             if (isDiag == false) break
         }
         return isDiag
     }
 
-    private static isFullColumn(cells: Array<HTMLTableCellElement>, col : number) {
+    private isFullColumn(cells: Array<HTMLTableCellElement>, col : number) {
         let fullCol : boolean = true
         let j = 0
-        while (fullCol && j < FIELD_LENGTH - 1) {
-            fullCol = cells[col + FIELD_LENGTH * j].textContent != '' &&
-                cells[col + FIELD_LENGTH * j].textContent == cells[col + FIELD_LENGTH * (j + 1)].textContent
+        while (fullCol && j < this.fieldStartLen - 1) {
+            fullCol = cells[col + this.fieldStartLen * j].textContent != '' &&
+                cells[col + this.fieldStartLen * j].textContent == cells[col + this.fieldStartLen * (j + 1)].textContent
             ++j
             if (!fullCol) break
         }
         return fullCol
     }
 
-    private static isFullRow(cells : Array<HTMLTableCellElement>, row : number) : boolean {
+    private isFullRow(cells : Array<HTMLTableCellElement>, row : number) : boolean {
         let fullRow : boolean = true;
         let j = 0;
-        while (fullRow && j < FIELD_LENGTH - 1) {
-            console.log(cells[j + row * FIELD_LENGTH].textContent)
-            fullRow = cells[j + row * FIELD_LENGTH].textContent != '' &&
-                cells[j + row * FIELD_LENGTH].textContent == cells[j + 1 + row*FIELD_LENGTH].textContent
+        while (fullRow && j < this.fieldStartLen - 1) {
+            console.log(cells[j + row * this.fieldStartLen].textContent)
+            fullRow = cells[j + row * this.fieldStartLen].textContent != '' &&
+                cells[j + row * this.fieldStartLen].textContent == cells[j + 1 + row*this.fieldStartLen].textContent
             ++j
             if (!fullRow) break
         }
@@ -173,7 +186,10 @@ class Field {
     }
 }
 
-
 const game = new TicTacToe()
-
-game.startGame()
+const lenInput : HTMLInputElement = document.querySelector("#sizeInput")
+lenInput.addEventListener("keydown", ev => {
+    if (ev.code == "Enter") {
+        game.startGame(Number(lenInput.value))
+    }
+})
